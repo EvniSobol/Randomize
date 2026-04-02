@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Рандомайзер | Два кубика = диапазон | vMix</title>
+    <title>Рандомайзер | Два кубика +/– | vMix Ready</title>
     <style>
         * {
             margin: 0;
@@ -29,7 +29,7 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             padding: 20px;
             background: transparent;
             z-index: 10;
@@ -39,7 +39,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 5rem;
+            gap: 4rem;
             flex-wrap: wrap;
             margin-bottom: 2rem;
             perspective: 1200px;
@@ -49,6 +49,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 16px;
         }
 
         .dice {
@@ -64,10 +65,10 @@
             position: absolute;
             width: 180px;
             height: 180px;
-            background: rgba(25, 25, 40, 0.9);
+            background: rgba(25, 25, 40, 0.92);
             backdrop-filter: blur(4px);
             border-radius: 28px;
-            border: 2px solid rgba(255, 200, 50, 0.8);
+            border: 2px solid rgba(255, 200, 50, 0.85);
             box-shadow: 0 0 20px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,220,100,0.3);
             display: flex;
             align-items: center;
@@ -79,18 +80,17 @@
             font-family: monospace;
         }
 
-        .front  { transform: translateZ(90px); background: rgba(20,20,38,0.95);}
-        .back   { transform: rotateY(180deg) translateZ(90px); background: rgba(20,20,38,0.95);}
-        .right  { transform: rotateY(90deg) translateZ(90px); background: rgba(20,20,38,0.95);}
-        .left   { transform: rotateY(-90deg) translateZ(90px); background: rgba(20,20,38,0.95);}
-        .top    { transform: rotateX(90deg) translateZ(90px); background: rgba(20,20,38,0.95);}
-        .bottom { transform: rotateX(-90deg) translateZ(90px); background: rgba(20,20,38,0.95);}
+        .front  { transform: translateZ(90px); background: rgba(20,20,38,0.96);}
+        .back   { transform: rotateY(180deg) translateZ(90px); background: rgba(20,20,38,0.96);}
+        .right  { transform: rotateY(90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
+        .left   { transform: rotateY(-90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
+        .top    { transform: rotateX(90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
+        .bottom { transform: rotateX(-90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
 
         .dice-label {
-            margin-top: 20px;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: bold;
-            background: rgba(0,0,0,0.55);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(12px);
             padding: 6px 20px;
             border-radius: 60px;
@@ -99,11 +99,49 @@
             letter-spacing: 1px;
         }
 
+        /* Блок с кнопками + и - */
+        .control-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+
+        .step-btn {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            border: 2px solid #ffb347;
+            color: #ffdd99;
+            font-size: 2rem;
+            font-weight: bold;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(0,0,0,0.5);
+            font-family: monospace;
+        }
+
+        .step-btn:hover {
+            background: #ffb347;
+            color: #1e1e2a;
+            transform: scale(1.07);
+            border-color: #ffdd99;
+        }
+
+        .step-btn:active {
+            transform: scale(0.94);
+        }
+
         .range-hint {
             font-size: 1.5rem;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.65);
             backdrop-filter: blur(16px);
-            padding: 12px 28px;
+            padding: 12px 32px;
             border-radius: 80px;
             margin-bottom: 25px;
             color: #ffdd99;
@@ -117,7 +155,7 @@
             font-weight: 900;
             color: #ffaa44;
             background: #00000066;
-            padding: 0 12px;
+            padding: 0 14px;
             border-radius: 40px;
             margin: 0 4px;
         }
@@ -144,7 +182,7 @@
         }
         .action-btn:active { transform: scale(0.97); }
 
-        /* Результат поверх всего */
+        /* Оверлей результата */
         .result-overlay {
             position: fixed;
             top: 0;
@@ -161,14 +199,13 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.25s ease;
-            backdrop-filter: blur(0px);
         }
 
         .result-card {
-            background: rgba(0,0,0,0.75);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(28px);
             border-radius: 70px;
-            padding: 20px 50px;
+            padding: 20px 55px;
             text-align: center;
             border: 3px solid #ffaa55;
             box-shadow: 0 0 70px rgba(0,0,0,0.6);
@@ -189,7 +226,7 @@
             margin-top: 10px;
         }
 
-        /* Анимация искр */
+        /* Искры */
         .spark-canvas {
             position: fixed;
             top: 0;
@@ -207,7 +244,7 @@
             transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
         }
 
-        @media (max-width: 680px) {
+        @media (max-width: 750px) {
             .dice-panel { gap: 2rem; }
             .dice { width: 130px; height: 130px; }
             .face { width: 130px; height: 130px; font-size: 3.6rem; }
@@ -222,6 +259,7 @@
             .action-btn { font-size: 1.5rem; padding: 10px 36px; }
             .range-hint { font-size: 1.1rem; }
             .range-hint span { font-size: 1.6rem; }
+            .step-btn { width: 48px; height: 48px; font-size: 1.7rem; }
         }
     </style>
 </head>
@@ -243,6 +281,10 @@
                 <div class="face bottom">5</div>
             </div>
             <div class="dice-label">ДЕСЯТКИ: <span id="tensValue">0</span></div>
+            <div class="control-buttons">
+                <button class="step-btn" id="tensMinus">–</button>
+                <button class="step-btn" id="tensPlus">+</button>
+            </div>
         </div>
         <!-- Кубик 2 (единицы) -->
         <div class="dice-wrapper">
@@ -255,6 +297,10 @@
                 <div class="face bottom">5</div>
             </div>
             <div class="dice-label">ЕДИНИЦЫ: <span id="unitsValue">0</span></div>
+            <div class="control-buttons">
+                <button class="step-btn" id="unitsMinus">–</button>
+                <button class="step-btn" id="unitsPlus">+</button>
+            </div>
         </div>
     </div>
     <button class="action-btn" id="rollBtn">Поехали!</button>
@@ -272,7 +318,7 @@
 
 <script>
     (function(){
-        // ----- Элементы -----
+        // ------ DOM элементы ------
         const diceTens = document.getElementById('diceTens');
         const diceUnits = document.getElementById('diceUnits');
         const tensSpan = document.getElementById('tensValue');
@@ -284,12 +330,18 @@
         const resultRangeText = document.getElementById('resultRangeText');
         const sparkCanvas = document.getElementById('sparkCanvas');
         const ctx = sparkCanvas.getContext('2d');
+        
+        // Кнопки +/-
+        const tensPlus = document.getElementById('tensPlus');
+        const tensMinus = document.getElementById('tensMinus');
+        const unitsPlus = document.getElementById('unitsPlus');
+        const unitsMinus = document.getElementById('unitsMinus');
 
         // ----- Значения кубиков (0..9) -----
         let tensDigit = 0;   // десятки
         let unitsDigit = 0;   // единицы
 
-        // Функция обновления граней куба (на каждой грани – последовательные цифры от стартовой)
+        // Функция обновления граней куба (последовательные цифры от startDigit)
         function updateDiceFaces(diceElement, startDigit) {
             const digits = [];
             for(let i=0; i<6; i++) {
@@ -315,7 +367,7 @@
             unitsSpan.innerText = unitsDigit;
         }
 
-        // Независимое обновление для каждого кубика
+        // Независимое обновление для десятков
         function setTensValue(newVal) {
             if(newVal < 0) newVal = 0;
             if(newVal > 9) newVal = 9;
@@ -323,6 +375,9 @@
                 tensDigit = newVal;
                 updateDiceFaces(diceTens, tensDigit);
                 updateRangeDisplay();
+                // небольшая анимация "подпрыгивания" для тактильного отклика
+                diceTens.style.transform = 'scale(0.98)';
+                setTimeout(() => { if(diceTens) diceTens.style.transform = ''; }, 120);
             }
         }
 
@@ -333,37 +388,40 @@
                 unitsDigit = newVal;
                 updateDiceFaces(diceUnits, unitsDigit);
                 updateRangeDisplay();
+                diceUnits.style.transform = 'scale(0.98)';
+                setTimeout(() => { if(diceUnits) diceUnits.style.transform = ''; }, 120);
             }
         }
 
-        // Инициализация кубов (0 и 0)
+        // Инициализация
         updateDiceFaces(diceTens, tensDigit);
         updateDiceFaces(diceUnits, unitsDigit);
         updateRangeDisplay();
 
-        // ----- Обработчики колесика мыши (независимые) -----
+        // ----- Обработчики кнопок + и - (основной способ) -----
+        tensPlus.addEventListener('click', () => setTensValue(tensDigit + 1));
+        tensMinus.addEventListener('click', () => setTensValue(tensDigit - 1));
+        unitsPlus.addEventListener('click', () => setUnitsValue(unitsDigit + 1));
+        unitsMinus.addEventListener('click', () => setUnitsValue(unitsDigit - 1));
+
+        // Дополнительно оставляем поддержку колесика мыши (для десктопа, но в vMix может не работать — на всякий случай)
         function attachWheel(diceElem, isTens) {
             diceElem.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? 1 : -1;
                 if(isTens) {
                     let newVal = tensDigit + delta;
-                    if(newVal >= 0 && newVal <= 9) {
-                        setTensValue(newVal);
-                    }
+                    if(newVal >= 0 && newVal <= 9) setTensValue(newVal);
                 } else {
                     let newVal = unitsDigit + delta;
-                    if(newVal >= 0 && newVal <= 9) {
-                        setUnitsValue(newVal);
-                    }
+                    if(newVal >= 0 && newVal <= 9) setUnitsValue(newVal);
                 }
             }, { passive: false });
         }
-
         attachWheel(diceTens, true);
         attachWheel(diceUnits, false);
 
-        // ---------- Система искр (взрыв эффект) ----------
+        // ---------- Система искр (взрыв) ----------
         let sparkActive = false;
         let sparkAnimId = null;
         let particles = [];
@@ -430,14 +488,9 @@
             sparkActive = true;
             sparkCanvas.style.opacity = "1";
             drawSparks();
-            setTimeout(() => {
-                if(sparkActive) {
-                    // если через 2 секунды всё ещё живы – принудительно не гасим, пусть доживут
-                }
-            }, 1800);
         }
 
-        // ----- Хаотичное вращение кубиков (промис) -----
+        // ----- Хаотичное вращение кубиков -----
         function chaoticSpin(diceElem, durationMs) {
             return new Promise((resolve) => {
                 const start = performance.now();
@@ -445,7 +498,7 @@
                     const now = performance.now();
                     if(now - start >= durationMs) {
                         clearInterval(interval);
-                        diceElem.style.transform = ''; // сброс (оставим нейтрально)
+                        diceElem.style.transform = '';
                         resolve();
                         return;
                     }
@@ -457,7 +510,7 @@
             });
         }
 
-        // ----- Анимация рулетки на финальном числе (лотерейная прокрутка) -----
+        // ----- Анимация рулетки на финальном числе -----
         async function animateResultNumber(finalNumber, maxRangeValue) {
             resultOverlay.style.opacity = "1";
             const steps = 22;
@@ -470,22 +523,20 @@
             finalResultSpan.innerText = finalNumber;
         }
 
-        // ----- Генерация случайного числа в диапазоне [0 .. maxLimit] -----
+        // ----- Генерация случайного числа [0 .. maxLimit] -----
         function getRandomInRange(maxLimit) {
             if(maxLimit === 0) return 0;
             return Math.floor(Math.random() * (maxLimit + 1));
         }
 
-        // ----- Основное состояние -----
+        // ----- Состояние анимации -----
         let isAnimating = false;
-        let lastGeneratedNumber = null;
 
-        // Основной розыгрыш
+        // Основной розыгрыш (без автоматического сброса)
         async function performRoll() {
             if(isAnimating) return;
             isAnimating = true;
             rollBtn.disabled = true;
-            rollBtn.style.opacity = "0.6";
             
             // 1) Искры
             startSparks();
@@ -499,34 +550,29 @@
             // 3) Исчезновение кубиков (уменьшение)
             diceTens.classList.add('shrink');
             diceUnits.classList.add('shrink');
-            // скроем лейблы под кубами
-            document.querySelectorAll('.dice-label').forEach(lbl => lbl.style.opacity = "0");
+            // скрываем лейблы и кнопки управления для чистоты
+            document.querySelectorAll('.dice-label, .control-buttons').forEach(el => el.style.opacity = "0");
             await new Promise(r => setTimeout(r, 400));
             diceTens.style.visibility = 'hidden';
             diceUnits.style.visibility = 'hidden';
             
-            // 4) Определяем МАКСИМАЛЬНОЕ число (двузначное от 0 до 99)
-            let maxLimit = tensDigit * 10 + unitsDigit;   // от 0 до 99
-            // Генерируем случайное число в диапазоне 0 .. maxLimit
+            // 4) Определяем максимальное число (десятки*10+единицы)
+            let maxLimit = tensDigit * 10 + unitsDigit;
             const randomValue = getRandomInRange(maxLimit);
-            lastGeneratedNumber = randomValue;
             
-            // 5) Анимируем финальную цифру (хаотичная прокрутка)
+            // 5) Анимация финальной цифры
             await animateResultNumber(randomValue, maxLimit);
             
             // Меняем текст кнопки на "Еще?"
             rollBtn.innerText = "Еще?";
             rollBtn.disabled = false;
-            rollBtn.style.opacity = "1";
             isAnimating = false;
-            
-            // Не сбрасываем результат автоматически — он остается на экране.
-            // Пользователь нажимает "Еще?" для новой генерации из ТЕХ ЖЕ самых значений кубиков.
         }
         
-        // Функция сброса интерфейса (восстановить кубики и убрать результат)
-        function resetInterfaceAfterNew() {
-            // Убираем оверлей результата
+        // Сброс интерфейса до состояния "кубики видны, результат скрыт"
+        async function resetToDiceMode() {
+            if(isAnimating) return;
+            // Прячем оверлей
             resultOverlay.style.opacity = "0";
             // Восстанавливаем кубики
             diceTens.classList.remove('shrink');
@@ -535,151 +581,43 @@
             diceUnits.style.visibility = 'visible';
             diceTens.style.transform = '';
             diceUnits.style.transform = '';
-            document.querySelectorAll('.dice-label').forEach(lbl => lbl.style.opacity = "1");
-            // Перерисовываем грани в актуальных значениях (на случай если кубы сбились)
-            updateDiceFaces(diceTens, tensDigit);
-            updateDiceFaces(diceUnits, unitsDigit);
-        }
-        
-        // Новая генерация (кнопка "Еще?" или "Поехали!" повторно)
-        async function handleRollOrAgain() {
-            if(isAnimating) return;
-            // Если результат сейчас виден (overlay видим) — сначала прячем его и возвращаем кубики,
-            // а потом запускаем полный цикл заново
-            const isResultVisible = (resultOverlay.style.opacity === "1");
-            if(isResultVisible) {
-                // Скрываем оверлей, восстанавливаем кубики мгновенно
-                resultOverlay.style.opacity = "0";
-                diceTens.classList.remove('shrink');
-                diceUnits.classList.remove('shrink');
-                diceTens.style.visibility = 'visible';
-                diceUnits.style.visibility = 'visible';
-                diceTens.style.transform = '';
-                diceUnits.style.transform = '';
-                document.querySelectorAll('.dice-label').forEach(lbl => lbl.style.opacity = "1");
-                updateDiceFaces(diceTens, tensDigit);
-                updateDiceFaces(diceUnits, unitsDigit);
-                // Небольшая пауза для плавности (необязательно)
-                await new Promise(r => setTimeout(r, 50));
-            }
-            // Теперь запускаем полный розыгрыш (анимация, искры, исчезновение, результат)
-            await performRoll();
-        }
-        
-        // Событие кнопки: всегда обрабатываем по новой логике (либо первый раз, либо "Еще?")
-        rollBtn.addEventListener('click', handleRollOrAgain);
-        
-        // Доп. защита: если вдруг после анимации оверлей остался, кнопка сбрасывает правильно.
-        // Также гарантируем, что при изменении кубиков (пока результат висит) — не должно влиять на диапазон нового розыгрыша? 
-        // По логике, когда результат виден, кубики скрыты, пользователь не может их крутить. При нажатии "Еще?" сначала убираем оверлей, затем снова крутим с текущими значениями кубиков.
-        // Идеально.
-        
-        // Добавим возможность, если пользователь хочет поменять диапазон во время показа результата — нельзя, так как кубики скрыты,
-        // что логично. Только после нажатия "Еще?" они появляются и можно крутить, но перед новым розыгрышем они исчезают.
-        // Доработаем: после того как результат показан и нажата "Еще?" мы восстанавливаем кубики и запускаем анимацию.
-        // Но нам нужно, чтобы после нажатия "Еще?" сначала восстанавливался интерфейс, а потом performRoll всё сделает.
-        // handleRollOrAgain уже содержит эту логику.
-        
-        // Дополнительно: если после завершения анимации результата пользователь не нажал "Еще?", а хочет покрутить кубики — но кубики скрыты.
-        // Это правильное поведение, так как для изменения диапазона нужно нажать "Еще?", чтобы вернуть кубики.
-        // Можно сделать так: при клике на "Еще?" мы возвращаем кубы, пользователь может крутить колесиком (менять диапазон) и потом снова нажать кнопку.
-        // НО в текущей реализации handleRollOrAgain сразу запускает performRoll, который снова скроет кубы. Чтобы дать пользователю поменять диапазон, 
-        // нужно чтобы после сброса оверлея кнопка временно называлась "Поехали!" и только после повторного клика запускался розыгрыш? 
-        // Уточнение UX: Когда результат виден, кнопка "Еще?". При клике исчезает результат, появляются кубики, но анимация НЕ стартует автоматически,
-        // пользователь может покрутить кубики (поменять диапазон), а потом нажать на ту же кнопку (которая теперь "Поехали!") для розыгрыша.
-        // Это удобнее. Переделаем финальный штрих.
-        
-        // Финальная доработка поведения:
-        // 1) После показа результата кнопка "Еще?"
-        // 2) При клике "Еще?" → убираем оверлей, показываем кубики, кнопка меняется на "Поехали!"
-        // 3) При клике "Поехали!" → запускаем розыгрыш с текущими значениями кубиков.
-        let waitingForReset = false;
-        
-        const originalPerformRoll = performRoll;
-        
-        async function resetAndPrepare() {
-            if(isAnimating) return;
-            // Убираем оверлей
-            resultOverlay.style.opacity = "0";
-            // Восстанавливаем кубики
-            diceTens.classList.remove('shrink');
-            diceUnits.classList.remove('shrink');
-            diceTens.style.visibility = 'visible';
-            diceUnits.style.visibility = 'visible';
-            diceTens.style.transform = '';
-            diceUnits.style.transform = '';
-            document.querySelectorAll('.dice-label').forEach(lbl => lbl.style.opacity = "1");
+            // Возвращаем видимость подписей и кнопок
+            document.querySelectorAll('.dice-label, .control-buttons').forEach(el => el.style.opacity = "1");
+            // Перерисовываем грани в актуальных значениях
             updateDiceFaces(diceTens, tensDigit);
             updateDiceFaces(diceUnits, unitsDigit);
             rollBtn.innerText = "Поехали!";
-            waitingForReset = false;
         }
         
-        async function newGameFlow() {
+        // Гибкий обработчик кнопки:
+        // - Если сейчас виден результат (оверлей) -> нажимаем "Еще?" -> сброс в режим кубиков
+        // - Если кубики видны и результат скрыт -> запускаем розыгрыш
+        async function onMainButtonClick() {
             if(isAnimating) return;
-            // Проверяем: если оверлей виден -> значит жмем "Еще?" -> сбросить и показать кубики
-            if(resultOverlay.style.opacity === "1") {
-                await resetAndPrepare();
-                return;
-            }
-            // Иначе если оверлей скрыт и кубики видны -> запускаем розыгрыш
-            if(!isAnimating && diceTens.style.visibility !== 'hidden') {
-                await performRoll(); // внутри меняет кнопку на "Еще?"
-                rollBtn.innerText = "Еще?";
-            }
-        }
-        
-        // Переопределяем обработчик
-        rollBtn.removeEventListener('click', handleRollOrAgain);
-        rollBtn.addEventListener('click', newGameFlow);
-        
-        // Но в performRoll после завершения нужно поменять текст на "Еще?"
-        // Переопределим performRoll локально, сохранив оригинал
-        window.performRoll = performRoll;
-        const superPerformRoll = async function() {
-            if(isAnimating) return;
-            isAnimating = true;
-            rollBtn.disabled = true;
-            startSparks();
-            await Promise.all([chaoticSpin(diceTens, 520), chaoticSpin(diceUnits, 520)]);
-            diceTens.classList.add('shrink');
-            diceUnits.classList.add('shrink');
-            document.querySelectorAll('.dice-label').forEach(lbl => lbl.style.opacity = "0");
-            await new Promise(r => setTimeout(r, 400));
-            diceTens.style.visibility = 'hidden';
-            diceUnits.style.visibility = 'hidden';
-            const maxLimit = tensDigit * 10 + unitsDigit;
-            const randomValue = getRandomInRange(maxLimit);
-            await animateResultNumber(randomValue, maxLimit);
-            rollBtn.innerText = "Еще?";
-            rollBtn.disabled = false;
-            isAnimating = false;
-        };
-        
-        // заменяем performRoll
-        window.performRoll = superPerformRoll;
-        const finalPerform = superPerformRoll;
-        
-        // Подменяем вызов в newGameFlow
-        async function finalNewGameFlow() {
-            if(isAnimating) return;
-            if(resultOverlay.style.opacity === "1") {
-                await resetAndPrepare();
-                return;
-            }
-            if(!isAnimating && diceTens.style.visibility !== 'hidden') {
-                await finalPerform();
+            const isResultVisible = (resultOverlay.style.opacity === "1");
+            if(isResultVisible) {
+                // Режим "Еще?" — просто сбрасываем до кубиков, не запуская розыгрыш автоматически
+                await resetToDiceMode();
+            } else {
+                // Режим "Поехали!" — запускаем полный розыгрыш
+                await performRoll();
             }
         }
         
-        rollBtn.removeEventListener('click', newGameFlow);
-        rollBtn.addEventListener('click', finalNewGameFlow);
+        rollBtn.addEventListener('click', onMainButtonClick);
         
-        // Инициализация: кнопка "Поехали!"
-        rollBtn.innerText = "Поехали!";
+        // Дополнительная безопасность: если вдруг после performRoll кнопка "Еще?" и пользователь хочет изменить значения,
+        // он нажимает "Еще?" → кубики появляются, кнопка меняется на "Поехали!", можно крутить +/-, потом снова "Поехали!".
+        // Идеально соответствует заданию.
         
-        // Небольшой фикс для корректной работы после восстановления
-        console.log("Рандомайзер готов | Диапазон = десятки*10+единицы");
+        // Также при сбросе убедимся, что случайно не осталось скрытых элементов
+        window.resetToDiceMode = resetToDiceMode;
+        
+        // Небольшой фикс для vMix: гарантировать прозрачность при любых раскладах
+        document.body.style.backgroundColor = 'transparent';
+        
+        // Если пользователь захочет повторно использовать колесико после сброса — всё ок, кнопки +\- всегда активны.
+        console.log("Рандомайзер готов. Десятки и единицы задают максимальное число. Кнопки +/- работают отлично!");
     })();
 </script>
 </body>
