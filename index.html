@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Рандомайзер | Два кубика +/– | vMix Ready</title>
+    <title>Рандомайзер | Розыгрыш из таблицы Яндекс Диска</title>
+    <!-- Подключаем библиотеку для работы с Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,23 +25,105 @@
             position: relative;
         }
 
-        .container {
+        /* Основной layout: список участников слева + рандомайзер справа */
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+            width: 100%;
+            max-width: 1400px;
+            gap: 30px;
+            padding: 20px;
+            background: transparent;
+            z-index: 10;
+        }
+
+        /* Блок со списком участников */
+        .participants-panel {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 20px 15px;
+            width: 300px;
+            border: 1px solid rgba(255, 200, 100, 0.5);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .participants-panel h3 {
+            text-align: center;
+            color: #ffdd99;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #ffb347;
+            padding-bottom: 8px;
+        }
+
+        .participants-list-container {
+            overflow-y: auto;
+            max-height: 500px;
+            scroll-behavior: smooth;
+        }
+
+        .participants-list {
+            list-style: none;
+            width: 100%;
+        }
+
+        .participants-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 4px 0;
+            background: rgba(30,30,45,0.7);
+            border-radius: 14px;
+            color: #ffecb3;
+            font-size: 1rem;
+            font-weight: 500;
+            border-left: 3px solid #ffaa44;
+            transition: all 0.2s;
+        }
+
+        .participants-list .winner-highlight {
+            background: linear-gradient(95deg, #ffaa33, #ff6a3d);
+            color: #1e1e2a;
+            font-weight: bold;
+            border-left: 5px solid gold;
+            box-shadow: 0 0 15px rgba(255,170,0,0.6);
+            transform: scale(1.01);
+        }
+
+        .participant-id {
+            font-weight: bold;
+            background: #00000055;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .participant-name {
+            font-weight: 500;
+        }
+
+        /* Стили рандомайзера (адаптируем под правую часть) */
+        .randomizer-container {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            max-width: 950px;
-            padding: 20px;
             background: transparent;
-            z-index: 10;
         }
 
         .dice-panel {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 4rem;
+            gap: 3rem;
             flex-wrap: wrap;
             margin-bottom: 2rem;
             perspective: 1200px;
@@ -53,8 +137,8 @@
         }
 
         .dice {
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             position: relative;
             cursor: pointer;
             transform-style: preserve-3d;
@@ -63,48 +147,43 @@
 
         .face {
             position: absolute;
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             background: rgba(25, 25, 40, 0.92);
             backdrop-filter: blur(4px);
-            border-radius: 28px;
+            border-radius: 24px;
             border: 2px solid rgba(255, 200, 50, 0.85);
-            box-shadow: 0 0 20px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,220,100,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 5rem;
+            font-size: 4rem;
             font-weight: 800;
             color: #ffdf99;
             text-shadow: 0 0 10px #ffaa33;
             font-family: monospace;
         }
 
-        .front  { transform: translateZ(90px); background: rgba(20,20,38,0.96);}
-        .back   { transform: rotateY(180deg) translateZ(90px); background: rgba(20,20,38,0.96);}
-        .right  { transform: rotateY(90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
-        .left   { transform: rotateY(-90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
-        .top    { transform: rotateX(90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
-        .bottom { transform: rotateX(-90deg) translateZ(90px); background: rgba(20,20,38,0.96);}
+        .front  { transform: translateZ(80px); background: rgba(20,20,38,0.96);}
+        .back   { transform: rotateY(180deg) translateZ(80px);}
+        .right  { transform: rotateY(90deg) translateZ(80px);}
+        .left   { transform: rotateY(-90deg) translateZ(80px);}
+        .top    { transform: rotateX(90deg) translateZ(80px);}
+        .bottom { transform: rotateX(-90deg) translateZ(80px);}
 
         .dice-label {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(12px);
-            padding: 6px 20px;
+            padding: 4px 16px;
             border-radius: 60px;
             color: #ffcd7e;
-            border: 1px solid rgba(255,200,100,0.6);
-            letter-spacing: 1px;
         }
 
-        /* Блок с кнопками + и - */
         .control-buttons {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             margin-top: 5px;
-            justify-content: center;
         }
 
         .step-btn {
@@ -112,77 +191,61 @@
             backdrop-filter: blur(12px);
             border: 2px solid #ffb347;
             color: #ffdd99;
-            font-size: 2rem;
+            font-size: 1.7rem;
             font-weight: bold;
-            width: 58px;
-            height: 58px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 12px rgba(0,0,0,0.5);
-            font-family: monospace;
         }
 
         .step-btn:hover {
             background: #ffb347;
             color: #1e1e2a;
-            transform: scale(1.07);
-            border-color: #ffdd99;
-        }
-
-        .step-btn:active {
-            transform: scale(0.94);
+            transform: scale(1.05);
         }
 
         .range-hint {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             background: rgba(0,0,0,0.65);
             backdrop-filter: blur(16px);
-            padding: 12px 32px;
+            padding: 8px 28px;
             border-radius: 80px;
             margin-bottom: 25px;
             color: #ffdd99;
             font-weight: bold;
-            border: 1px solid #ffb347;
             text-align: center;
         }
 
         .range-hint span {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 900;
             color: #ffaa44;
             background: #00000066;
-            padding: 0 14px;
+            padding: 0 12px;
             border-radius: 40px;
-            margin: 0 4px;
         }
 
         .action-btn {
             background: linear-gradient(95deg, #e04e2a, #ff6a3d);
             border: none;
-            padding: 14px 48px;
-            font-size: 1.9rem;
+            padding: 12px 42px;
+            font-size: 1.8rem;
             font-weight: bold;
             color: white;
             border-radius: 70px;
             cursor: pointer;
             box-shadow: 0 0 25px rgba(255, 80, 40, 0.7);
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-family: inherit;
-            letter-spacing: 4px;
+            transition: transform 0.2s;
             margin-top: 10px;
         }
 
-        .action-btn:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 35px rgba(255, 100, 40, 0.9);
-        }
         .action-btn:active { transform: scale(0.97); }
 
-        /* Оверлей результата */
         .result-overlay {
             position: fixed;
             top: 0;
@@ -193,7 +256,6 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 1rem;
             background: transparent;
             z-index: 200;
             pointer-events: none;
@@ -202,31 +264,21 @@
         }
 
         .result-card {
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(28px);
             border-radius: 70px;
-            padding: 20px 55px;
+            padding: 20px 50px;
             text-align: center;
             border: 3px solid #ffaa55;
-            box-shadow: 0 0 70px rgba(0,0,0,0.6);
         }
 
         .result-digit {
-            font-size: 8rem;
+            font-size: 6rem;
             font-weight: 900;
             font-family: monospace;
             color: #ffd966;
-            text-shadow: 0 0 20px #ff8800;
-            letter-spacing: 8px;
         }
 
-        .result-range-info {
-            font-size: 1.3rem;
-            color: #ffc285;
-            margin-top: 10px;
-        }
-
-        /* Искры */
         .spark-canvas {
             position: fixed;
             top: 0;
@@ -244,380 +296,324 @@
             transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
         }
 
-        @media (max-width: 750px) {
-            .dice-panel { gap: 2rem; }
-            .dice { width: 130px; height: 130px; }
-            .face { width: 130px; height: 130px; font-size: 3.6rem; }
-            .front  { transform: translateZ(65px); }
-            .back   { transform: rotateY(180deg) translateZ(65px); }
-            .right  { transform: rotateY(90deg) translateZ(65px); }
-            .left   { transform: rotateY(-90deg) translateZ(65px); }
-            .top    { transform: rotateX(90deg) translateZ(65px); }
-            .bottom { transform: rotateX(-90deg) translateZ(65px); }
-            .result-digit { font-size: 4.2rem; }
-            .result-card { padding: 12px 28px; }
-            .action-btn { font-size: 1.5rem; padding: 10px 36px; }
-            .range-hint { font-size: 1.1rem; }
-            .range-hint span { font-size: 1.6rem; }
-            .step-btn { width: 48px; height: 48px; font-size: 1.7rem; }
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; align-items: center; gap: 20px; }
+            .participants-panel { width: 90%; max-height: 280px; }
+            .participants-list-container { max-height: 200px; }
+            .dice { width: 120px; height: 120px; }
+            .face { width: 120px; height: 120px; font-size: 3rem; }
+            .front  { transform: translateZ(60px); }
+            .back   { transform: rotateY(180deg) translateZ(60px); }
+            .right  { transform: rotateY(90deg) translateZ(60px); }
+            .left   { transform: rotateY(-90deg) translateZ(60px); }
+            .top    { transform: rotateX(90deg) translateZ(60px); }
+            .bottom { transform: rotateX(-90deg) translateZ(60px); }
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="appContainer">
-    <div class="range-hint" id="rangeHint">
-        🎲 ДИАПАЗОН: от 0 до <span id="maxRangeSpan">99</span>
-    </div>
-    <div class="dice-panel">
-        <!-- Кубик 1 (десятки) -->
-        <div class="dice-wrapper">
-            <div class="dice" id="diceTens">
-                <div class="face front">0</div>
-                <div class="face back">1</div>
-                <div class="face right">2</div>
-                <div class="face left">3</div>
-                <div class="face top">4</div>
-                <div class="face bottom">5</div>
-            </div>
-            <div class="dice-label">ДЕСЯТКИ: <span id="tensValue">0</span></div>
-            <div class="control-buttons">
-                <button class="step-btn" id="tensMinus">–</button>
-                <button class="step-btn" id="tensPlus">+</button>
-            </div>
-        </div>
-        <!-- Кубик 2 (единицы) -->
-        <div class="dice-wrapper">
-            <div class="dice" id="diceUnits">
-                <div class="face front">0</div>
-                <div class="face back">1</div>
-                <div class="face right">2</div>
-                <div class="face left">3</div>
-                <div class="face top">4</div>
-                <div class="face bottom">5</div>
-            </div>
-            <div class="dice-label">ЕДИНИЦЫ: <span id="unitsValue">0</span></div>
-            <div class="control-buttons">
-                <button class="step-btn" id="unitsMinus">–</button>
-                <button class="step-btn" id="unitsPlus">+</button>
-            </div>
+<div class="main-layout">
+    <!-- Левая панель: список участников (первые 10 строк) -->
+    <div class="participants-panel">
+        <h3>🎲 УЧАСТНИКИ</h3>
+        <div class="participants-list-container" id="participantsListContainer">
+            <ul class="participants-list" id="participantsList">
+                <li>Загрузка данных...</li>
+            </ul>
         </div>
     </div>
-    <button class="action-btn" id="rollBtn">Поехали!</button>
+
+    <!-- Правая часть: рандомайзер -->
+    <div class="randomizer-container">
+        <div class="range-hint" id="rangeHint">
+            🎯 ДИАПАЗОН: от 0 до <span id="maxRangeSpan">99</span>
+        </div>
+        <div class="dice-panel">
+            <div class="dice-wrapper">
+                <div class="dice" id="diceTens">
+                    <div class="face front">0</div><div class="face back">1</div><div class="face right">2</div>
+                    <div class="face left">3</div><div class="face top">4</div><div class="face bottom">5</div>
+                </div>
+                <div class="dice-label">ДЕСЯТКИ: <span id="tensValue">0</span></div>
+                <div class="control-buttons"><button class="step-btn" id="tensMinus">–</button><button class="step-btn" id="tensPlus">+</button></div>
+            </div>
+            <div class="dice-wrapper">
+                <div class="dice" id="diceUnits">
+                    <div class="face front">0</div><div class="face back">1</div><div class="face right">2</div>
+                    <div class="face left">3</div><div class="face top">4</div><div class="face bottom">5</div>
+                </div>
+                <div class="dice-label">ЕДИНИЦЫ: <span id="unitsValue">0</span></div>
+                <div class="control-buttons"><button class="step-btn" id="unitsMinus">–</button><button class="step-btn" id="unitsPlus">+</button></div>
+            </div>
+        </div>
+        <button class="action-btn" id="rollBtn">Поехали!</button>
+    </div>
 </div>
 
-<!-- Оверлей результата -->
 <div class="result-overlay" id="resultOverlay">
-    <div class="result-card">
-        <div class="result-digit" id="finalResultNumber">0</div>
-        <div class="result-range-info" id="resultRangeText"></div>
-    </div>
+    <div class="result-card"><div class="result-digit" id="finalResultNumber">0</div></div>
 </div>
-
 <canvas id="sparkCanvas" class="spark-canvas"></canvas>
 
 <script>
     (function(){
-        // ------ DOM элементы ------
-        const diceTens = document.getElementById('diceTens');
-        const diceUnits = document.getElementById('diceUnits');
+        // --- Прямая ссылка на скачивание (href из Яндекс.Диска) ---
+        const EXCEL_DOWNLOAD_URL = "https://downloader.disk.yandex.ru/disk/53b7fd3b0003ab4a8fea1f87737423ff809551e094cd191754065df312988ad3/69cfcd44/N7BDvGuxK-z5itB_VmaPYXOWVlimTGjHcdKgJ8Udr0LcNBRK6Hp2qhfLFq8Q9CSWGCvW5tFlQlVM0SF9abB-ug%3D%3D?uid=0&filename=%D0%A2%D0%B5%D1%81%D1%82_%D0%A0%D0%BE%D0%B7%D1%8B%D0%B3%D1%80%D1%8B%D1%88.xlsx&disposition=attachment&hash=1062atnRYCawaAUK64A82UPScfIOoV7%2BiaSmmvThuI8ha3Rlyw/MlH7Apo4WlElSq/J6bpmRyOJonT3VoXnDag%3D%3D%3A&limit=0&content_type=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet&owner_uid=33200951&fsize=5058&hid=3f9964292cf52ff7b2e43320364c13d3&media_type=document&tknv=v3";
+        
+        let participants = []; // массив { id: номер, name: имя }
+        let totalParticipants = 0;
+        
+        // DOM элементы
+        const participantsListEl = document.getElementById('participantsList');
+        const participantsContainer = document.getElementById('participantsListContainer');
+        const maxRangeSpan = document.getElementById('maxRangeSpan');
         const tensSpan = document.getElementById('tensValue');
         const unitsSpan = document.getElementById('unitsValue');
-        const maxRangeSpan = document.getElementById('maxRangeSpan');
+        const diceTens = document.getElementById('diceTens');
+        const diceUnits = document.getElementById('diceUnits');
         const rollBtn = document.getElementById('rollBtn');
         const resultOverlay = document.getElementById('resultOverlay');
         const finalResultSpan = document.getElementById('finalResultNumber');
-        const resultRangeText = document.getElementById('resultRangeText');
-        const sparkCanvas = document.getElementById('sparkCanvas');
-        const ctx = sparkCanvas.getContext('2d');
         
-        // Кнопки +/-
-        const tensPlus = document.getElementById('tensPlus');
-        const tensMinus = document.getElementById('tensMinus');
-        const unitsPlus = document.getElementById('unitsPlus');
-        const unitsMinus = document.getElementById('unitsMinus');
-
-        // ----- Значения кубиков (0..9) -----
-        let tensDigit = 0;   // десятки
-        let unitsDigit = 0;   // единицы
-
-        // Функция обновления граней куба (последовательные цифры от startDigit)
+        // Кубики значения
+        let tensDigit = 0;
+        let unitsDigit = 0;
+        
+        // Функция обновления граней куба
         function updateDiceFaces(diceElement, startDigit) {
             const digits = [];
-            for(let i=0; i<6; i++) {
-                let val = (startDigit + i) % 10;
-                digits.push(val);
-            }
+            for(let i=0; i<6; i++) digits.push((startDigit + i) % 10);
             const faces = diceElement.querySelectorAll('.face');
-            if(faces.length === 6) {
-                faces[0].innerText = digits[0]; // front
-                faces[1].innerText = digits[1]; // back
-                faces[2].innerText = digits[2]; // right
-                faces[3].innerText = digits[3]; // left
-                faces[4].innerText = digits[4]; // top
-                faces[5].innerText = digits[5]; // bottom
+            if(faces.length === 6) faces.forEach((face, idx) => face.innerText = digits[idx]);
+        }
+        
+        function setTensValue(newVal) {
+            newVal = Math.min(9, Math.max(0, newVal));
+            if(tensDigit !== newVal) {
+                tensDigit = newVal;
+                updateDiceFaces(diceTens, tensDigit);
+                updateRangeDisplay();
             }
         }
-
-        // Обновить отображение диапазона (двузначное число)
+        
+        function setUnitsValue(newVal) {
+            newVal = Math.min(9, Math.max(0, newVal));
+            if(unitsDigit !== newVal) {
+                unitsDigit = newVal;
+                updateDiceFaces(diceUnits, unitsDigit);
+                updateRangeDisplay();
+            }
+        }
+        
         function updateRangeDisplay() {
             let maxVal = tensDigit * 10 + unitsDigit;
             maxRangeSpan.innerText = maxVal;
             tensSpan.innerText = tensDigit;
             unitsSpan.innerText = unitsDigit;
         }
-
-        // Независимое обновление для десятков
-        function setTensValue(newVal) {
-            if(newVal < 0) newVal = 0;
-            if(newVal > 9) newVal = 9;
-            if(tensDigit !== newVal) {
-                tensDigit = newVal;
-                updateDiceFaces(diceTens, tensDigit);
-                updateRangeDisplay();
-                // небольшая анимация "подпрыгивания" для тактильного отклика
-                diceTens.style.transform = 'scale(0.98)';
-                setTimeout(() => { if(diceTens) diceTens.style.transform = ''; }, 120);
-            }
-        }
-
-        function setUnitsValue(newVal) {
-            if(newVal < 0) newVal = 0;
-            if(newVal > 9) newVal = 9;
-            if(unitsDigit !== newVal) {
-                unitsDigit = newVal;
-                updateDiceFaces(diceUnits, unitsDigit);
-                updateRangeDisplay();
-                diceUnits.style.transform = 'scale(0.98)';
-                setTimeout(() => { if(diceUnits) diceUnits.style.transform = ''; }, 120);
-            }
-        }
-
-        // Инициализация
-        updateDiceFaces(diceTens, tensDigit);
-        updateDiceFaces(diceUnits, unitsDigit);
-        updateRangeDisplay();
-
-        // ----- Обработчики кнопок + и - (основной способ) -----
-        tensPlus.addEventListener('click', () => setTensValue(tensDigit + 1));
-        tensMinus.addEventListener('click', () => setTensValue(tensDigit - 1));
-        unitsPlus.addEventListener('click', () => setUnitsValue(unitsDigit + 1));
-        unitsMinus.addEventListener('click', () => setUnitsValue(unitsDigit - 1));
-
-        // Дополнительно оставляем поддержку колесика мыши (для десктопа, но в vMix может не работать — на всякий случай)
-        function attachWheel(diceElem, isTens) {
-            diceElem.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? 1 : -1;
-                if(isTens) {
-                    let newVal = tensDigit + delta;
-                    if(newVal >= 0 && newVal <= 9) setTensValue(newVal);
-                } else {
-                    let newVal = unitsDigit + delta;
-                    if(newVal >= 0 && newVal <= 9) setUnitsValue(newVal);
+        
+        // Загрузка и парсинг Excel
+        async function loadParticipantsFromExcel() {
+            try {
+                const response = await fetch(EXCEL_DOWNLOAD_URL);
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+                if(!rows || rows.length < 2) throw new Error("Таблица пуста");
+                
+                // Предполагаем: первый ряд заголовки: A1 = Номер, B1 = Имя
+                const dataRows = rows.slice(1);
+                participants = [];
+                for(let i=0; i<dataRows.length; i++) {
+                    const row = dataRows[i];
+                    let id = row[0] !== undefined ? row[0] : i+1;
+                    let name = row[1] !== undefined ? row[1] : `Участник ${i+1}`;
+                    if(id === "" || id === undefined) id = i+1;
+                    if(name === "" || name === undefined) name = `Участник ${i+1}`;
+                    participants.push({ id: String(id), name: String(name) });
                 }
-            }, { passive: false });
-        }
-        attachWheel(diceTens, true);
-        attachWheel(diceUnits, false);
-
-        // ---------- Система искр (взрыв) ----------
-        let sparkActive = false;
-        let sparkAnimId = null;
-        let particles = [];
-
-        function resizeSparkCanvas() {
-            sparkCanvas.width = window.innerWidth;
-            sparkCanvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeSparkCanvas);
-        resizeSparkCanvas();
-
-        function createFireworks() {
-            const count = 220;
-            particles = [];
-            for(let i=0; i<count; i++) {
-                particles.push({
-                    x: Math.random() * sparkCanvas.width,
-                    y: Math.random() * sparkCanvas.height,
-                    radius: Math.random() * 6 + 2,
-                    vx: (Math.random() - 0.5) * 14,
-                    vy: (Math.random() - 0.5) * 14 - 2,
-                    alpha: Math.random() * 0.9 + 0.3,
-                    color: `hsl(${Math.random() * 50 + 15}, 100%, 60%)`,
-                    life: 1,
-                    decay: 0.018 + Math.random() * 0.025
-                });
+                totalParticipants = participants.length;
+                // Устанавливаем максимальное значение кубиков равным общему числу участников (но не более 99)
+                let maxVal = Math.min(99, totalParticipants);
+                let newTens = Math.floor(maxVal / 10);
+                let newUnits = maxVal % 10;
+                setTensValue(newTens);
+                setUnitsValue(newUnits);
+                renderParticipantsList();
+            } catch(e) {
+                console.error(e);
+                participantsListEl.innerHTML = '<li>Ошибка загрузки таблицы</li>';
+                totalParticipants = 0;
+                setTensValue(0);
+                setUnitsValue(0);
             }
         }
-
-        function drawSparks() {
-            if(!sparkActive) return;
-            ctx.clearRect(0, 0, sparkCanvas.width, sparkCanvas.height);
-            let anyAlive = false;
-            for(let i=0; i<particles.length; i++) {
-                const p = particles[i];
-                if(p.life <= 0) continue;
-                anyAlive = true;
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= p.decay;
-                p.alpha = p.life * 0.9;
-                ctx.globalAlpha = p.alpha;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI*2);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = "#ffaa44";
-            }
-            if(!anyAlive) {
-                sparkActive = false;
-                if(sparkAnimId) cancelAnimationFrame(sparkAnimId);
-                sparkCanvas.style.opacity = "0";
-                ctx.clearRect(0,0,sparkCanvas.width, sparkCanvas.height);
+        
+        // Отображаем первые 10 строк
+        function renderParticipantsList() {
+            if(!participants.length) {
+                participantsListEl.innerHTML = '<li>Нет данных</li>';
                 return;
             }
+            const displayList = participants.slice(0, 10);
+            participantsListEl.innerHTML = displayList.map(p => `
+                <li data-id="${p.id}">
+                    <span class="participant-id">#${p.id}</span>
+                    <span class="participant-name">${escapeHtml(p.name)}</span>
+                </li>
+            `).join('');
+        }
+        
+        // Подсветка и прокрутка к победителю
+        function highlightWinnerById(winnerId) {
+            // Снимаем подсветку со всех
+            const allItems = document.querySelectorAll('#participantsList li');
+            allItems.forEach(li => li.classList.remove('winner-highlight'));
+            // Ищем элемент победителя (среди первых 10, но если победитель за пределами 10, то прокрутка не сработает?
+            // Но победитель может быть не в первых 10. Для прокрутки найдём его позицию в общем списке.
+            const winnerIndex = participants.findIndex(p => String(p.id) === String(winnerId));
+            if(winnerIndex === -1) return;
+            
+            // Если победитель среди первых 10 - просто подсветим.
+            if(winnerIndex < 10) {
+                const targetLi = document.querySelector(`#participantsList li[data-id="${winnerId}"]`);
+                if(targetLi) targetLi.classList.add('winner-highlight');
+                return;
+            }
+            
+            // Иначе нужно обновить список, чтобы показать нужный диапазон (показать 10 строк вокруг победителя)
+            let start = Math.max(0, winnerIndex - 4);
+            let end = Math.min(participants.length, start + 10);
+            start = Math.max(0, end - 10);
+            const sliceToShow = participants.slice(start, end);
+            participantsListEl.innerHTML = sliceToShow.map(p => `
+                <li data-id="${p.id}">
+                    <span class="participant-id">#${p.id}</span>
+                    <span class="participant-name">${escapeHtml(p.name)}</span>
+                </li>
+            `).join('');
+            // Подсветка
+            const winnerLi = document.querySelector(`#participantsList li[data-id="${winnerId}"]`);
+            if(winnerLi) winnerLi.classList.add('winner-highlight');
+            // Плавный скролл контейнера
+            const container = participantsContainer;
+            if(winnerLi) {
+                winnerLi.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        
+        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+        
+        // ---------- Анимация розыгрыша ----------
+        let isAnimating = false;
+        const sparkCanvas = document.getElementById('sparkCanvas');
+        const ctx = sparkCanvas.getContext('2d');
+        let sparkActive = false, sparkAnimId = null, particles = [];
+        
+        function resizeSpark() { sparkCanvas.width = window.innerWidth; sparkCanvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeSpark); resizeSpark();
+        
+        function createSparks() {
+            particles = [];
+            for(let i=0;i<220;i++) particles.push({ x: Math.random()*sparkCanvas.width, y: Math.random()*sparkCanvas.height, radius: Math.random()*6+2, vx: (Math.random()-0.5)*14, vy: (Math.random()-0.5)*14-2, life: 1, decay: 0.018+Math.random()*0.025, color: `hsl(${Math.random()*50+15},100%,60%)` });
+        }
+        function drawSparks() {
+            if(!sparkActive) return;
+            ctx.clearRect(0,0,sparkCanvas.width,sparkCanvas.height);
+            let alive=false;
+            for(let p of particles) {
+                if(p.life<=0) continue;
+                alive=true;
+                p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
+                ctx.globalAlpha=p.life*0.9;
+                ctx.beginPath(); ctx.arc(p.x,p.y,p.radius*p.life,0,Math.PI*2);
+                ctx.fillStyle=p.color; ctx.fill();
+            }
+            if(!alive) { sparkActive=false; if(sparkAnimId) cancelAnimationFrame(sparkAnimId); sparkCanvas.style.opacity="0"; return; }
             sparkAnimId = requestAnimationFrame(drawSparks);
         }
-
-        function startSparks() {
-            if(sparkAnimId) cancelAnimationFrame(sparkAnimId);
-            resizeSparkCanvas();
-            createFireworks();
-            sparkActive = true;
-            sparkCanvas.style.opacity = "1";
-            drawSparks();
-        }
-
-        // ----- Хаотичное вращение кубиков -----
-        function chaoticSpin(diceElem, durationMs) {
-            return new Promise((resolve) => {
+        function startSparks() { if(sparkAnimId) cancelAnimationFrame(sparkAnimId); resizeSpark(); createSparks(); sparkActive=true; sparkCanvas.style.opacity="1"; drawSparks(); }
+        
+        function chaoticSpin(diceElem, duration) {
+            return new Promise(resolve => {
                 const start = performance.now();
                 const interval = setInterval(() => {
-                    const now = performance.now();
-                    if(now - start >= durationMs) {
-                        clearInterval(interval);
-                        diceElem.style.transform = '';
-                        resolve();
-                        return;
-                    }
-                    const rx = Math.random() * 360;
-                    const ry = Math.random() * 360;
-                    const rz = Math.random() * 360;
-                    diceElem.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+                    if(performance.now()-start >= duration) { clearInterval(interval); diceElem.style.transform=''; resolve(); }
+                    else diceElem.style.transform = `rotateX(${Math.random()*360}deg) rotateY(${Math.random()*360}deg) rotateZ(${Math.random()*360}deg)`;
                 }, 40);
             });
         }
-
-        // ----- Анимация рулетки на финальном числе -----
-        async function animateResultNumber(finalNumber, maxRangeValue) {
+        
+        async function animateResultNumber(finalNumber) {
             resultOverlay.style.opacity = "1";
-            const steps = 22;
-            for(let i=0; i<=steps; i++) {
-                const fakeNum = Math.floor(Math.random() * (maxRangeValue + 1));
-                finalResultSpan.innerText = fakeNum;
-                resultRangeText.innerText = `диапазон 0 … ${maxRangeValue}`;
-                await new Promise(r => setTimeout(r, 55));
-            }
+            for(let i=0;i<=22;i++) { finalResultSpan.innerText = Math.floor(Math.random() * (totalParticipants+1)); await new Promise(r=>setTimeout(r,55)); }
             finalResultSpan.innerText = finalNumber;
         }
-
-        // ----- Генерация случайного числа [0 .. maxLimit] -----
-        function getRandomInRange(maxLimit) {
-            if(maxLimit === 0) return 0;
-            return Math.floor(Math.random() * (maxLimit + 1));
-        }
-
-        // ----- Состояние анимации -----
-        let isAnimating = false;
-
-        // Основной розыгрыш (без автоматического сброса)
+        
         async function performRoll() {
-            if(isAnimating) return;
+            if(isAnimating || totalParticipants === 0) return;
             isAnimating = true;
             rollBtn.disabled = true;
-            
-            // 1) Искры
             startSparks();
-            
-            // 2) Кубики хаотично вращаются
-            await Promise.all([
-                chaoticSpin(diceTens, 520),
-                chaoticSpin(diceUnits, 520)
-            ]);
-            
-            // 3) Исчезновение кубиков (уменьшение)
-            diceTens.classList.add('shrink');
-            diceUnits.classList.add('shrink');
-            // скрываем лейблы и кнопки управления для чистоты
+            await Promise.all([chaoticSpin(diceTens, 520), chaoticSpin(diceUnits, 520)]);
+            diceTens.classList.add('shrink'); diceUnits.classList.add('shrink');
             document.querySelectorAll('.dice-label, .control-buttons').forEach(el => el.style.opacity = "0");
-            await new Promise(r => setTimeout(r, 400));
-            diceTens.style.visibility = 'hidden';
-            diceUnits.style.visibility = 'hidden';
+            await new Promise(r=>setTimeout(r,400));
+            diceTens.style.visibility = 'hidden'; diceUnits.style.visibility = 'hidden';
             
-            // 4) Определяем максимальное число (десятки*10+единицы)
             let maxLimit = tensDigit * 10 + unitsDigit;
-            const randomValue = getRandomInRange(maxLimit);
+            if(maxLimit > totalParticipants) maxLimit = totalParticipants;
+            if(maxLimit < 0) maxLimit = 0;
+            let winnerNumber = Math.floor(Math.random() * (maxLimit + 1));
+            // Находим участника с таким номером (если номер 0 – особый случай, можно выбрать первого или любого)
+            let winner = null;
+            if(winnerNumber === 0 && totalParticipants > 0) winner = participants[0];
+            else winner = participants.find(p => Number(p.id) === winnerNumber);
+            if(!winner && totalParticipants>0) winner = participants[0];
+            const winnerId = winner ? winner.id : "0";
+            const displayNumber = winner ? winner.id : "0";
             
-            // 5) Анимация финальной цифры
-            await animateResultNumber(randomValue, maxLimit);
+            await animateResultNumber(displayNumber);
+            // Прокрутка и подсветка победителя в списке
+            if(winner) highlightWinnerById(winner.id);
+            else highlightWinnerById("0");
             
-            // Меняем текст кнопки на "Еще?"
             rollBtn.innerText = "Еще?";
             rollBtn.disabled = false;
             isAnimating = false;
         }
         
-        // Сброс интерфейса до состояния "кубики видны, результат скрыт"
         async function resetToDiceMode() {
             if(isAnimating) return;
-            // Прячем оверлей
             resultOverlay.style.opacity = "0";
-            // Восстанавливаем кубики
-            diceTens.classList.remove('shrink');
-            diceUnits.classList.remove('shrink');
-            diceTens.style.visibility = 'visible';
-            diceUnits.style.visibility = 'visible';
-            diceTens.style.transform = '';
-            diceUnits.style.transform = '';
-            // Возвращаем видимость подписей и кнопок
+            diceTens.classList.remove('shrink'); diceUnits.classList.remove('shrink');
+            diceTens.style.visibility = 'visible'; diceUnits.style.visibility = 'visible';
+            diceTens.style.transform = ''; diceUnits.style.transform = '';
             document.querySelectorAll('.dice-label, .control-buttons').forEach(el => el.style.opacity = "1");
-            // Перерисовываем грани в актуальных значениях
-            updateDiceFaces(diceTens, tensDigit);
-            updateDiceFaces(diceUnits, unitsDigit);
+            updateDiceFaces(diceTens, tensDigit); updateDiceFaces(diceUnits, unitsDigit);
             rollBtn.innerText = "Поехали!";
+            // Восстанавливаем полный список участников (первые 10 строк)
+            renderParticipantsList();
         }
         
-        // Гибкий обработчик кнопки:
-        // - Если сейчас виден результат (оверлей) -> нажимаем "Еще?" -> сброс в режим кубиков
-        // - Если кубики видны и результат скрыт -> запускаем розыгрыш
-        async function onMainButtonClick() {
+        async function onMainClick() {
             if(isAnimating) return;
-            const isResultVisible = (resultOverlay.style.opacity === "1");
-            if(isResultVisible) {
-                // Режим "Еще?" — просто сбрасываем до кубиков, не запуская розыгрыш автоматически
-                await resetToDiceMode();
-            } else {
-                // Режим "Поехали!" — запускаем полный розыгрыш
-                await performRoll();
-            }
+            if(resultOverlay.style.opacity === "1") await resetToDiceMode();
+            else await performRoll();
         }
         
-        rollBtn.addEventListener('click', onMainButtonClick);
+        // Инициализация событий кнопок кубиков
+        document.getElementById('tensPlus').addEventListener('click',()=>setTensValue(tensDigit+1));
+        document.getElementById('tensMinus').addEventListener('click',()=>setTensValue(tensDigit-1));
+        document.getElementById('unitsPlus').addEventListener('click',()=>setUnitsValue(unitsDigit+1));
+        document.getElementById('unitsMinus').addEventListener('click',()=>setUnitsValue(unitsDigit-1));
+        rollBtn.addEventListener('click', onMainClick);
         
-        // Дополнительная безопасность: если вдруг после performRoll кнопка "Еще?" и пользователь хочет изменить значения,
-        // он нажимает "Еще?" → кубики появляются, кнопка меняется на "Поехали!", можно крутить +/-, потом снова "Поехали!".
-        // Идеально соответствует заданию.
-        
-        // Также при сбросе убедимся, что случайно не осталось скрытых элементов
-        window.resetToDiceMode = resetToDiceMode;
-        
-        // Небольшой фикс для vMix: гарантировать прозрачность при любых раскладах
-        document.body.style.backgroundColor = 'transparent';
-        
-        // Если пользователь захочет повторно использовать колесико после сброса — всё ок, кнопки +\- всегда активны.
-        console.log("Рандомайзер готов. Десятки и единицы задают максимальное число. Кнопки +/- работают отлично!");
+        // Загружаем таблицу и стартуем
+        loadParticipantsFromExcel();
+        updateDiceFaces(diceTens, 0); updateDiceFaces(diceUnits, 0);
     })();
 </script>
 </body>
